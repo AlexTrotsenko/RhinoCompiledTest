@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">RhinoCompiledTest</string>
+    <string name="action_settings">Settings</string>
+    <string name="button_toast">Toast</string>
+    <string name="power_placeholder">Enter power (of 10) for calculating Pi</string>
+    <string name="load_jars">Load Jars</string>
+</resources>
