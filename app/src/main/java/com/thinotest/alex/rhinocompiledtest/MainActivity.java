@@ -23,8 +23,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Date;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 
 public class MainActivity extends AppCompatActivity {
+    private ScheduledExecutorService JsExecutor = Executors.newSingleThreadScheduledExecutor();
+
     private static final String TAG = MainActivity.class.getSimpleName();
 
     private Context context;
@@ -42,28 +46,37 @@ public class MainActivity extends AppCompatActivity {
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View view) {
+            public void onClick(final View view) {
                 final String iterations = ((EditText) findViewById(R.id.editText)).getText().toString();
                 final String startingMessage = "Starting Pi computation with " + iterations + " iterations";
                 Snackbar.make(view, startingMessage, Snackbar.LENGTH_LONG).show();
 
-                try {
-                    final long averageExecutionTime = computePiByJs(iterations);
+                JsExecutor.submit(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            final long averageExecutionTime = computePiByJs(iterations);
 
-                    Snackbar.make(view, "Average execution time: " + averageExecutionTime, Snackbar.LENGTH_LONG).show();
-                } catch (Throwable t) {
-                    final String errorMsg = "JS failed ";
+                            Snackbar.make(view, "Average execution time: " + averageExecutionTime, Snackbar.LENGTH_LONG).show();
+                        } catch (Throwable t) {
+                            final String errorMsg = "JS failed ";
 
-                    Log.e(TAG, errorMsg, t);
-                    Snackbar.make(view, errorMsg + t.getMessage(), Snackbar.LENGTH_LONG).show();
-                }
+                            Log.e(TAG, errorMsg, t);
+                            Snackbar.make(view, errorMsg + t.getMessage(), Snackbar.LENGTH_LONG).show();
+                        }
+                    }
+                });
             }
         });
 
-
-        context = new RhinoAndroidHelper(this).enterContext();
-        context.setOptimizationLevel(-1);
-        scope = context.initStandardObjects();
+        JsExecutor.submit(new Runnable() {
+            @Override
+            public void run() {
+                context = new RhinoAndroidHelper(MainActivity.this).enterContext();
+                context.setOptimizationLevel(-1);
+                scope = context.initStandardObjects();
+            }
+        });
     }
 
     /**
